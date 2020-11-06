@@ -1,0 +1,11 @@
+#inicializar el servidore de redis
+redis-server
+#iniciar el beat
+celery -A FabSpaceRestApi  beat
+
+#iniciar los workers
+celery -A FabSpaceRestApi  worker -B
+
+
+####activar ambiente virtual
+source mypython/bin/activate
