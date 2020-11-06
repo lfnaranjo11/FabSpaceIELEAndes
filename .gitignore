@@ -1,0 +1,14 @@
+**/migrations/
+**/__pycache__
+.vscode
+db.sqlite3
+**/media
+**/Pipfile
+**/Pipfile.*
+**/*.env
+**/.DS_Store
+**/data
+**/queryfiles
+**/celerybeat-schedule.db
+**/node_modules
+**/bin
