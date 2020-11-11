@@ -57,7 +57,23 @@ class WorldBorder(models.Model):
         return self.name
 
 
+class DepartamentosVeredas(models.Model):
+    dpto_ccdgo = models.CharField(max_length=2, primary_key=True, unique=True)
+    geom = models.MultiPolygonField(srid=4326)
+
+
+class MunicipiosVeredas(models.Model):
+    dptompio = models.CharField(max_length=5, primary_key=True, unique=True)
+    dpto_ccdgo = models.ForeignKey(
+        DepartamentosVeredas, on_delete=models.CASCADE)
+    mpio_ccdgo = models.CharField(max_length=3)
+    mpio_cnmbr = models.CharField(max_length=60)
+    mpio_ccnct = models.CharField(max_length=5)
+    geom = models.MultiPolygonField(srid=4326)
+
+
 class veredas(models.Model):
+
     objectid = models.IntegerField(primary_key=True)
     dptompio = models.CharField(max_length=5)
     codigo_ver = models.CharField(max_length=11)
@@ -69,7 +85,8 @@ class veredas(models.Model):
     descripcio = models.CharField(max_length=50)
     seudonimos = models.CharField(max_length=250)
     area_ha = models.FloatField()
-    cod_dpto = models.CharField(max_length=2)
+    cod_dpto = models.ForeignKey(
+        DepartamentosVeredas, on_delete=models.CASCADE)
     shape_leng = models.FloatField()
     shape_area = models.FloatField()
     geom = models.MultiPolygonField(srid=4326)

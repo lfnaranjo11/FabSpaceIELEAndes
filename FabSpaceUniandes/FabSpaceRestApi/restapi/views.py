@@ -8,28 +8,24 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.views.decorators.cache import cache_page
 from .serializers import ImgSerializer, RequirementsSerializer
-from .models import Img, Requeriments
+from .models import Img, Requeriments, DepartamentosVeredas, MunicipiosVeredas
 from django.views.decorators.vary import vary_on_headers
 from .tasks import query_and_download
 from django.core.serializers import serialize
 from .models import veredas, WorldBorder
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
-
-# class verjson(APIView):
 
 #   permission_classes = (AllowAny,)
 
-
 # def get(self, request):
 # serialize('geojson', veredas.objects.filter(nom_dep='VALLE DEL CAUCA', nomb_mpio='YUMBO',
-#                                          nombre_ver = "SANTA INES"), geometry_field='geom', fields=('nombre_ver',))
-
+#                                            nombre_ver="SANTA INES"), geometry_field='geom', fields=('nombre_ver',))
 
 # class worldborders(APIView):
 
-
-#permission_classes = (AllowAny,)
-
+# permission_classes = (AllowAny,)
 
 # def get(self, request):
 #  serialize('geojson', WorldBorder.objects.filter(),
@@ -98,3 +94,89 @@ class WatchList(APIView):
         else:
             serializer.save(state)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class Verjson(APIView):
+    permission_classes = (AllowAny,)
+
+    # recibe la zona de interes sin tiempo
+    # verifica que no haya nuevas en la API y si las hay las descarga.
+
+    def get(self, request, mpio_cdgo):
+        sx = serialize('geojson', veredas.objects.filter(dptompio=mpio_cdgo
+                                                         ), geometry_field='geom', fields=('nombre_ver',))
+        m = json.loads(sx)
+        return Response(m)
+
+
+class Deptosjson(APIView):
+    permission_classes = (AllowAny,)
+    # recibe la zona de interes sin tiempo
+    # verifica que no haya nuevas en la API y si las hay las descarga.
+
+    def get(self, request, depto_cdgo):
+        sx = serialize('geojson', DepartamentosVeredas.objects.filter(dpto_ccdgo=depto_cdgo),
+                       geometry_field='geom', fields=('dpto_ccdgo',))
+        m = json.loads(sx)
+        return Response(m)
+
+
+class Municipiosjson(APIView):
+    permission_classes = (AllowAny,)
+    # recibe la zona de interes sin tiempo
+    # verifica que no haya nuevas en la API y si las hay las descarga.
+
+    def get(self, request, depto_cdgo):
+        print('hola')
+        sx = serialize('geojson', MunicipiosVeredas.objects.filter(dpto_ccdgo=depto_cdgo
+                                                                   ), geometry_field='geom', fields=('mpio_cnmbr',))
+        m = json.loads(sx)
+        return Response(m)
+
+
+class ListDeptos(APIView):
+    permission_classes = (AllowAny,)
+
+    # lista todos los nombres de los deptos y sus codigos.
+    def get(self, request):
+        qery = veredas.objects.values('nom_dep', 'cod_dpto').distinct()
+        return Response(qery)
+
+
+class ListMpios(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request, depto_cdgo):
+        qery = MunicipiosVeredas.objects.filter(
+            dpto_ccdgo=depto_cdgo).values('mpio_cnmbr', 'mpio_ccdgo', 'dptompio', 'mpio_ccnct')
+        print(depto_cdgo)
+        print(qery)
+        print('siga')
+        return Response(qery)
+
+
+class Verjson(APIView):
+    permission_classes = (AllowAny,)
+
+    # recibe la zona de interes sin tiempo
+    # verifica que no haya nuevas en la API y si las hay las descarga.
+
+    def get(self, request, mpio_cdgo):
+        print('santiago')
+        sx = serialize('geojson', veredas.objects.filter(dptompio=mpio_cdgo
+                                                         ), geometry_field='geom', fields=('nombre_ver',))
+        m = json.loads(sx)
+        return Response(m)
+
+
+class ListVdas(APIView):
+    permission_classes = (AllowAny,)
+
+    # recibe la zona de interes sin tiempo
+    # verifica que no haya nuevas en la API y si las hay las descarga.
+
+    def get(self, request, mpio_cdgo):
+        print('MANDE')
+        query = veredas.objects.filter(
+            dptompio=mpio_cdgo).values('nombre_ver', 'codigo_ver')
+        return Response(query)

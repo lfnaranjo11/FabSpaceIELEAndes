@@ -4,14 +4,17 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Toolbar from './components/Toolbar';
 import Layout from './components/Layout';
+import { TokenProvider } from './store/TokenContext';
 
 function App() {
   return (
     <>
-      <BrowserRouter>
-        <Toolbar></Toolbar>
-        <Layout></Layout>
-      </BrowserRouter>
+      <TokenProvider>
+        <BrowserRouter>
+          <Toolbar></Toolbar>
+          <Layout></Layout>
+        </BrowserRouter>
+      </TokenProvider>
     </>
   );
 }
