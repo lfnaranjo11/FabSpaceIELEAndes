@@ -55,7 +55,9 @@ class Now(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
+        print(request.data)
         serializer = RequirementsSerializer(data=request.data)
+        print(serializer)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -94,19 +96,6 @@ class WatchList(APIView):
         else:
             serializer.save(state)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class Verjson(APIView):
-    permission_classes = (AllowAny,)
-
-    # recibe la zona de interes sin tiempo
-    # verifica que no haya nuevas en la API y si las hay las descarga.
-
-    def get(self, request, mpio_cdgo):
-        sx = serialize('geojson', veredas.objects.filter(dptompio=mpio_cdgo
-                                                         ), geometry_field='geom', fields=('nombre_ver',))
-        m = json.loads(sx)
-        return Response(m)
 
 
 class Deptosjson(APIView):
@@ -172,8 +161,7 @@ class Verjson(APIView):
 class ListVdas(APIView):
     permission_classes = (AllowAny,)
 
-    # recibe la zona de interes sin tiempo
-    # verifica que no haya nuevas en la API y si las hay las descarga.
+    # lista las veredas dado el codigo de un municipio
 
     def get(self, request, mpio_cdgo):
         print('MANDE')

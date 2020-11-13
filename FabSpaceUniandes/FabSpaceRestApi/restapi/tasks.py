@@ -8,9 +8,19 @@ import os
 from .models import Requeriments, Img, veredas
 from .serializers import ImgSerializer
 from django.db import connection
-#from bs4 import BeautifulSoup
+from pathlib import Path
+from .serializers import ImgSerializer, RequirementsSerializer
+from bs4 import BeautifulSoup
+from PIL import Image
+from django.contrib.gis.geos import GEOSGeometry
+import json
+
+
+# from bs4 import BeautifulSoup
 # SELECT the_geom FROM geom_tableWHERE ST_DWithin(the_geom, 'SRID=312;POINT(100000 200000)', 100)
 # Select  ST_AsText(ST_SimplifyPreserveTopology(restapi_veredas.geom,1))  from restapi_veredas WHERE id=3
+
+# checking and checking
 
 
 def my_custom_sql(id_vereda):
@@ -45,7 +55,7 @@ def check_points(punto2, punto1):
 def check_vereda_poligon(vereda_object):
     if bool(vereda_object):
         print(vereda_object.objectid)
-        #objectid = int(veredaid)
+        # objectid = int(veredaid)
         resultado = my_custom_sql(vereda_object.objectid)
         print(resultado[0])
         return """'( footprint:"Intersects({})")'""".format(resultado[0])
@@ -90,10 +100,95 @@ def check_search_values(reqmt):
     # return query.format('1', user, password, mission, product_type, ingestion_init_date, ingestion_end_date, sensing_init_date, sensing_end_date, points, vereda_poligon)
 
 
+def read_MTD(file_name):
+    file_name2 = file_name+'.SAFE'
+    path_file = Path(__file__).resolve().parent
+    path_file = path_file.resolve().parent
+    path_file = path_file.joinpath(file_name2)
+    imgs_location = str(path_file)
+    path_file = path_file.joinpath('MTD_MSIL2A.xml')
+    path_string = str(path_file)
+    print("img location is:", imgs_location)
+
+    with open(path_string, 'r') as f:
+        data = f.read()
+    Bs_data = BeautifulSoup(data, "xml")
+    cordenadas = Bs_data.Global_Footprint.EXT_POS_LIST.string
+    image_uri = Bs_data.PRODUCT_URI.string
+    hora = Bs_data.PRODUCT_START_TIME.string
+    print(cordenadas)
+    print(cordenadas.split(" "))
+    pnt = points_to_multipoligon_object(str(cordenadas))
+    print(str(pnt))
+
+    imagen = Img(title='call an ambulance', esa_uiid=image_uri,
+                 filedir=imgs_location, geom_img=GEOSGeometry(pnt))
+    salvada = imagen.save()
+    print(salvada)
+    #serializer = ImgSerializer(data=data)
+    # if not serializer.is_valid():
+    #    print(serializer.errors)
+    #    print('not ok')
+    # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # else:
+    #    serializer.save()
+    #    print('super ok')
+    # return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # return Bs_data.PRODUCT_TYPE
+
+
+def odd_even_sieve(lista):
+    output = lista[:]
+    even_index, odd_index = 0, 1
+    for i in range(len(lista)):
+        if i % 2 == 0:
+            output[even_index] = float(lista[i+1])
+            even_index += 2
+        else:
+            output[odd_index] = float(lista[i-1])
+            odd_index += 2
+    return output
+
+
+def points_to_multipoligon_object(points_string):
+    points_list = points_string.split(" ")
+    points_list = points_list[:-1]
+    list_even_odd_ex = odd_even_sieve(points_list)
+    chunks = [list_even_odd_ex[x:x+2]
+              for x in range(0, len(list_even_odd_ex), 2)]
+    data = {}
+    data["type"] = "MultiPolygon"
+    cord = [[chunks]]
+    data["coordinates"] = cord
+    print(str(data))
+    pnt = GEOSGeometry(str(data))
+    return pnt
+
+
+def cropimage(path, name):
+    #m = Image.open("hopper.jpg")
+    # The crop method from the Image module takes four coordinates as input.
+    # The right can also be represented as (left+width)
+    # and lower can be represented as (upper+height).
+    (left, upper, right, lower) = (20, 20, 100, 100)
+    im = Image.open(path+'/'+name + ".jp2")
+    # Here the image "im" is cropped and assigned to new variable im_crop
+    im_crop = im.crop((left, upper, right, lower))
+    im_crop.save(path + '/'+name + "croped.jp2")
+
+
+def createThumbnail(path, name):
+    size = 128, 128
+    im = Image.open(path+'/'+name + ".jp2")
+    im_resized = im.resize(size)
+    #im.save(path + ".thumbnail", "JPEG")
+    im_resized.save(path + '/'+name + "resized.jp2")
+
+
 @ shared_task
 def query_and_download(id):
     # TO-DO arreglar el poligono y revisar match de opciones
-    # now
+    # id es el id del requerimiento
     query_file = './restapi/queryfiles/{}.csv'
     query_file_instance = query_file.format(id)
     reqmt = Requeriments.objects.filter(id=id).first()
@@ -103,27 +198,13 @@ def query_and_download(id):
     statnmt.append('-C')
     statnmt.append(query_file_instance)
     proc = subprocess.check_call(statnmt)
-    # try:
-    #    outs, errs = proc.communicate(timeout=100)
-    # except TimeoutExpired:
-    #    proc.kill()
-    #    outs, errs = proc.communicate()
     f = open(query_file_instance, "r")
     valores = f.read()
     [name, uuidd_copernicus] = valores.split(',')
     img_file = './PRODUCT/{}.zip'.format(name)
     proc = subprocess.check_call(['unzip', img_file])
-   # response = urllib2.urlopen(
-    #    'http://tutorialspoint.com/python/python_overview.htm')
-    #html_doc = response.read()
-
-    #soup = BeautifulSoup(html_doc, 'html.parser')
-
-    # print(soup.title)
-
+    read_MTD(name)
     return print(valores)
-
-# INFUTURE
 
 
 @ shared_task
@@ -151,10 +232,12 @@ def byrequirement(rq_id):
         print(line)
         serializer = ImgSerializer(img_uiid=linea[1])
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+           # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print('error')
         else:
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            print('bien escrita')
+            # return Response(serializer.data, status=status.HTTP_201_CREATED)
     # os.system(queryset)
     # leer el csv e ir escribiendo las imagenes a la base de datos
 

@@ -196,7 +196,7 @@ CELERY_BEAT_SCHEDULE = {
     # },
     "download": {
         "task": "restapi.tasks.write_interest_zone_query",
-        "schedule": 12000,
+        "schedule": 1200000,
     },
 
 }

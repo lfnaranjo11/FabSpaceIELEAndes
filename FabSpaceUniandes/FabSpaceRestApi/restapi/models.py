@@ -154,23 +154,24 @@ class Img(models.Model):
     ################### database and user identificators ###################
     ##############################################################
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, blank=True, null=True)
     # esa_copernicus_identifier
-    esa_uiid = models.TextField(max_length=100)
+    esa_uiid = models.TextField(max_length=100, blank=True, null=True)
 
     state = models.TextField(
-        max_length=100, choices=DOWNLOAD_STATE_CHOICES)  # estado de descarga de la imagen.
+        max_length=100, choices=DOWNLOAD_STATE_CHOICES, blank=True, null=True)  # estado de descarga de la imagen.
     # direction of the image & files
-    filedir = models.TextField(max_length=100)
+    filedir = models.TextField(max_length=100, blank=True, null=True)
 
     ##############################################################
     ################### informacion geografica ###################
     ##############################################################
 
-    ingestion_date = models.DateTimeField()
-    geom_img = models.MultiPolygonField(srid=4326)  # la locacion de la imagen
+    ingestion_date = models.DateTimeField(blank=True, null=True)
+    geom_img = models.MultiPolygonField(
+        srid=4326, blank=True, null=True)  # la locacion de la imagen
     origin_requirement = models.ForeignKey(
-        Requeriments, on_delete=models.CASCADE)
+        Requeriments, on_delete=models.CASCADE, blank=True, null=True)
 
     # TO-DO cortar pedazos y crear nueva imagen. esa_uuid null
 

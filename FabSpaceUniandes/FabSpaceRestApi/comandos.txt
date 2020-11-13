@@ -4,7 +4,7 @@ redis-server
 celery -A FabSpaceRestApi  beat
 
 #iniciar los workers
-celery -A FabSpaceRestApi  worker -B
+celery -A FabSpaceRestApi  worker -B --loglevel INFO
 
 
 ####activar ambiente virtual
