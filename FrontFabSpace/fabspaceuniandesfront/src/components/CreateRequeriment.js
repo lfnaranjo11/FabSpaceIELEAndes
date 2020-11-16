@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-import axios from '../helpers/axios-requests';
 import instance from '../helpers/axios-requests';
 
 import { useHistory } from 'react-router-dom';
@@ -79,53 +78,6 @@ export default function CreateRequeriment() {
       }),
     });
     setMap(map);
-    /*
-    var source = new VectorSource({
-      url: 'http://127.0.0.1:8000/restapi/veredasgeojson/',
-      format: new GeoJSON(),
-    });
-    var vectorLayer = new VectorLayer({
-      source: source,
-      visible: true,
-      title: 'ColombiaRegionsGEOJSON',
-    });
-    map.addLayer(vectorLayer);
-    var select = new OLSelect();
-    map.addInteraction(select);
-    var selectedFeatures = select.getFeatures();
-    // a DragBox interaction used to select features by drawing boxes
-    var dragBox = new DragBox({
-      condition: platformModifierKeyOnly,
-    });
-    map.addInteraction(dragBox);
-    setBox(dragBox);
-    dragBox.on('boxend', function () {
-      var rotation = map.getView().getRotation();
-      var oblique = rotation % (Math.PI / 2) !== 0;
-      var candidateFeatures = oblique ? [] : selectedFeatures;
-      var extent = dragBox.getGeometry().getExtent();
-      source.forEachFeatureIntersectingExtent(extent, function (feature) {
-        candidateFeatures.push(feature);
-      });
-    });
-
-    // clear selection when drawing a new box and when clicking on the map
-    dragBox.on('boxstart', function () {
-      selectedFeatures.clear();
-    });
-
-    var infoBox = document.getElementById('info');
-
-    selectedFeatures.on(['add', 'remove'], function () {
-      var names = selectedFeatures.getArray().map(function (feature) {
-        return feature.get('nombre_ver');
-      });
-      if (names.length > 0) {
-        infoBox.innerHTML = names.join(', ');
-      } else {
-        infoBox.innerHTML = 'No countries selected';
-      }
-    });*/
   }, []);
   const handleSelectVereda = (event) => {
     setSelectedVda(event.target.value);

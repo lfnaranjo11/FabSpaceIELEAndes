@@ -62,54 +62,6 @@ const Toolbar = (props) => {
           </Tooly>
         </AppBar>
       </div>
-      <header>
-        <nav class='navbar navbar-expand navbar-dark bg-dark'>
-          <a class='navbar-brand ' href='/'>
-            DesignMatch ©
-          </a>
-          <div class='collapse navbar-collapse' id='navbarNav'>
-            <ul class='navbar-nav'>
-              {token === '' ? (
-                <li class='nav-item'>
-                  <a class='nav-link' href='/'>
-                    Home
-                  </a>
-                </li>
-              ) : (
-                <li class='nav-item'>
-                  <a class='nav-link' href='/myEnterprise'>
-                    Mi empresa
-                  </a>
-                </li>
-              )}
-            </ul>
-
-            {token === '' ? (
-              <ul class='navbar-nav ml-auto'>
-                <li class='nav-item ml-auto'>
-                  <Link class='nav-link' to='/login'>
-                    Log in
-                  </Link>
-                </li>
-                <li class='nav-item ml-auto'>
-                  <Link class='nav-link' to='/register'>
-                    Sign up
-                  </Link>
-                </li>
-              </ul>
-            ) : (
-              <ul class='navbar-nav ml-auto'>
-                <li class='nav-item ml-auto'>
-                  <Link class='nav-link' to='/' onClick={() => logOut()}>
-                    Log out
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </div>
-        </nav>
-        <div class='conteiner p-3'></div>
-      </header>
     </>
   );
 };

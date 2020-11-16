@@ -6,7 +6,7 @@ from django.views.decorators.cache import cache_page
 urlpatterns = [
     path('api-auth/', authviews.obtain_auth_token),
     path('imgscache/', cache_page(60 * 15)(views.Imgs.as_view())),
-    path('imgsnocache/', views.Imgs.as_view()),
+    path('imgs/', views.Imgs.as_view(), ),
     path('imgbyid/', views.Imgs.as_view()),
     path('now/', views.Now.as_view()),
     path('listdeptos/', views.ListDeptos.as_view()),
@@ -18,8 +18,9 @@ urlpatterns = [
     path('veredasgeojson/<str:mpio_cdgo>',
          views.Verjson.as_view(), name='get veredas geogson by mpio'),
     path('listvdas/<str:mpio_cdgo>', views.ListVdas.as_view()),
-
-
+    path('listreq/', views.ListReq.as_view()),
+    path('imgsjson/', views.JsonImgs.as_view()),
+    path('imgsjson/<str:req>', views.JsonImgsByReq.as_view())
 
 
 ]

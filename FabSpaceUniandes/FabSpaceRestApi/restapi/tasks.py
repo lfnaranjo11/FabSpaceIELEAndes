@@ -100,7 +100,7 @@ def check_search_values(reqmt):
     # return query.format('1', user, password, mission, product_type, ingestion_init_date, ingestion_end_date, sensing_init_date, sensing_end_date, points, vereda_poligon)
 
 
-def read_MTD(file_name):
+def read_MTD(file_name, id):
     file_name2 = file_name+'.SAFE'
     path_file = Path(__file__).resolve().parent
     path_file = path_file.resolve().parent
@@ -120,9 +120,11 @@ def read_MTD(file_name):
     print(cordenadas.split(" "))
     pnt = points_to_multipoligon_object(str(cordenadas))
     print(str(pnt))
-
-    imagen = Img(title='call an ambulance', esa_uiid=image_uri,
-                 filedir=imgs_location, geom_img=GEOSGeometry(pnt))
+    print(hora)
+    requri = Requeriments.objects.get(id=id)
+    imagen = Img(title='call an ambulance', esa_uiid=image_uri, state='DISPONIBLE',
+                 filedir=imgs_location, geom_img=GEOSGeometry(pnt), ingestion_date=hora,
+                 origin_requirement=requri)
     salvada = imagen.save()
     print(salvada)
     #serializer = ImgSerializer(data=data)
@@ -203,7 +205,7 @@ def query_and_download(id):
     [name, uuidd_copernicus] = valores.split(',')
     img_file = './PRODUCT/{}.zip'.format(name)
     proc = subprocess.check_call(['unzip', img_file])
-    read_MTD(name)
+    read_MTD(name, id)
     return print(valores)
 
 
@@ -232,14 +234,10 @@ def byrequirement(rq_id):
         print(line)
         serializer = ImgSerializer(img_uiid=linea[1])
         if not serializer.is_valid():
-           # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             print('error')
         else:
             serializer.save()
             print('bien escrita')
-            # return Response(serializer.data, status=status.HTTP_201_CREATED)
-    # os.system(queryset)
-    # leer el csv e ir escribiendo las imagenes a la base de datos
 
 
 @ shared_task

@@ -30,6 +30,13 @@ import json
 # def get(self, request):
 #  serialize('geojson', WorldBorder.objects.filter(),
 #           geometry_field='mpoly', fields=('name',))
+class ListReq(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        queryset = Requeriments.objects.all()
+        serializer = RequirementsSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class Imgs(APIView):
@@ -168,3 +175,25 @@ class ListVdas(APIView):
         query = veredas.objects.filter(
             dptompio=mpio_cdgo).values('nombre_ver', 'codigo_ver')
         return Response(query)
+
+
+class JsonImgs(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+
+        sx = serialize('geojson', Img.objects.all(),
+                       geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+        m = json.loads(sx)
+        return Response(m)
+
+
+class JsonImgsByReq(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request, req):
+        requri = Requeriments.objects.get(id=req)
+        sx = serialize('geojson', Img.objects.filter(origin_requirement=requri),
+                       geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+        m = json.loads(sx)
+        return Response(m)

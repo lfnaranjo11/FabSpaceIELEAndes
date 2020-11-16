@@ -11,6 +11,7 @@ import {
 
 import { useToken } from '../store/TokenContext';
 import CreateRequeriment from './CreateRequeriment';
+import IndexingImages from './IndexingImages';
 //withMyHook(MyDiv);
 const Layout = (props) => {
   const token = useToken();
@@ -23,6 +24,7 @@ const Layout = (props) => {
       )}
       <Switch name='con o sin sesion'>
         <Route path='/register' exact component={CreateRequeriment} />
+        <Route path='/index' exact component={IndexingImages} />
       </Switch>
     </>
   );
