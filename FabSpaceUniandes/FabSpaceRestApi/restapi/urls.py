@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 from rest_framework import routers
 from rest_framework.authtoken import views as authviews
 from . import views
@@ -20,7 +20,12 @@ urlpatterns = [
     path('listvdas/<str:mpio_cdgo>', views.ListVdas.as_view()),
     path('listreq/', views.ListReq.as_view()),
     path('imgsjson/', views.JsonImgs.as_view()),
-    path('imgsjson/<str:req>', views.JsonImgsByReq.as_view())
+    path('imgsjson/from=<str:date_init>to=<str:date_end>',
+         views.JsonImgs.as_view()),
+    path('imgsjson/<str:req>', views.JsonImgsByReq.as_view()),
+
+    re_path(
+        r'^imgsjson/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/$', views.JsonImgs.as_view()),
 
 
 ]

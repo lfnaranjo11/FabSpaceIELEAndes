@@ -9,6 +9,10 @@ import { Vector as VectorLayer } from 'ol/layer';
 import { DragBox, Select as OLSelect } from 'ol/interaction';
 import { platformModifierKeyOnly } from 'ol/events/condition';
 import { fromLonLat } from 'ol/proj';
+import { all } from 'ol/loadingstrategy'; //MATERIAL-UI IMPORTS
+import { tile } from 'ol/loadingstrategy';
+import * as olLoadingstrategy from 'ol/loadingstrategy';
+import { bbox } from 'ol/loadingstrategy';
 
 //MATERIAL-UI IMPORTS
 import { makeStyles } from '@material-ui/core/styles';
@@ -41,6 +45,7 @@ import {
   MuiPickersUtilsProvider,
   KeyboardTimePicker,
   KeyboardDatePicker,
+  DatePicker,
 } from '@material-ui/pickers';
 
 import instance from '../helpers/axios-requests';
@@ -87,16 +92,7 @@ export default function IndexingImages() {
   const [requerimentSelected, setRequirementSelected] = useState();
   const [imagenes, setImagenes] = useState([]);
 
-  const [currentLayer, setCurrentLayer] = useState();
-  const [value, setValue] = React.useState([
-    React.useState(new Date('2014-08-18T21:11:54')),
-    React.useState(new Date('2014-12-18T21:11:54')),
-  ]);
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-    console.log(newValue);
-  };
-
+  //////////////INITIAL CONFIGURATION////////////////
   useEffect(() => {
     instance
       .get('/listreq/')
@@ -107,31 +103,7 @@ export default function IndexingImages() {
         console.log(err);
       });
   }, []);
-  const handleSelectReq = (event) => {
-    setRequirementSelected(event.target.value);
-    mapu.removeLayer(currentLayer);
-    var sourceReq = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/imgsjson/${event.target.value}`,
-      format: new GeoJSON(),
-    });
-    var vectorLayerImg = new VectorLayer({
-      source: sourceReq,
-      visible: true,
-      title: 'ImgsbyReqGEOJSON',
-    });
-    setCurrentLayer(vectorLayerImg);
-    mapu.addLayer(vectorLayerImg);
-    console.log(event.target.value);
-  };
-  const [selectedDate, setSelectedDate] = React.useState(
-    new Date('2014-08-18T21:11:54')
-  );
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    console.log(date);
-  };
-  const classes = useStyles();
   useEffect(() => {
     const map = new Map({
       target: 'map',
@@ -147,7 +119,7 @@ export default function IndexingImages() {
       }),
     });
     var sourceMpios = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/imgsjson/`,
+      url: 'http://127.0.0.1:8000/restapi/imgsjson/',
       format: new GeoJSON(),
     });
     var vectorLayerMpios = new VectorLayer({
@@ -162,7 +134,6 @@ export default function IndexingImages() {
     map.addInteraction(select);
     // a DragBox interaction used to select features by drawing boxes
     var selectedFeatures = select.getFeatures();
-    var infoBox = document.getElementById('info');
     // a DragBox interaction used to select features by drawing boxes
     var dragBox = new DragBox({
       condition: platformModifierKeyOnly,
@@ -171,12 +142,6 @@ export default function IndexingImages() {
     map.addInteraction(dragBox);
 
     dragBox.on('boxend', function () {
-      // features that intersect the box geometry are added to the
-      // collection of selected features
-
-      // if the view is not obliquely rotated the box geometry and
-      // its extent are equalivalent so intersecting features can
-      // be added directly to the collection
       var rotation = map.getView().getRotation();
       var oblique = rotation % (Math.PI / 2) !== 0;
       var candidateFeatures = oblique ? [] : selectedFeatures;
@@ -184,12 +149,6 @@ export default function IndexingImages() {
       sourceMpios.forEachFeatureIntersectingExtent(extent, function (feature) {
         candidateFeatures.push(feature);
       });
-
-      // when the view is obliquely rotated the box extent will
-      // exceed its geometry so both the box and the candidate
-      // feature geometries are rotated around a common anchor
-      // to confirm that, with the box geometry aligned with its
-      // extent, the geometries intersect
       if (oblique) {
         var anchor = [0, 0];
         var geometry = dragBox.getGeometry().clone();
@@ -225,14 +184,148 @@ export default function IndexingImages() {
         setImagenes(arreglo);
       } else {
         setImagenes([]);
-        infoBox.innerHTML = 'No countries selected';
       }
     });
   }, []);
 
+  ////////////////////////////////
+
+  /////DATE MANAGEMEET/////////////////////////////////
+  /////////////////////////////////////////////////////
+  //////////////////needs its own component
+  const [fechaInicio, setFechaInicio] = useState(new Date('01/01/2020'));
+  const [fechaFin, setFechaFin] = useState(new Date('2020/12/31'));
+  const [currentLayer, setCurrentLayer] = useState();
+  const [valueSliderFechas, setValueSliderFechas] = React.useState([1, 365]);
+  const handleChangeSlider = (event, newValue) => {
+    setValueSliderFechas(newValue);
+    var [nuinicio, nunfin] = newValue;
+    const inicio = getDateFromDayNum(nuinicio, 2020);
+    const fin = getDateFromDayNum(nunfin, 2020);
+    setFechaInicio(inicio);
+    setFechaFin(fin);
+    console.log(inicio);
+  };
+
+  ///from date to number
+  const calculateDay = (now) => {
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    var oneDay = 1000 * 60 * 60 * 24;
+    var day = Math.floor(diff / oneDay);
+    console.log('Day of year: ' + day);
+    return day;
+  };
+  var getDateFromDayNum = (dayNum, year) => {
+    var date = new Date();
+    if (year) {
+      date.setFullYear(year);
+    }
+    date.setMonth(0);
+    date.setDate(0);
+    var timeOfFirst = date.getTime(); // this is the time in milliseconds of 1/1/YYYY
+    var dayMilli = 1000 * 60 * 60 * 24;
+    var dayNumMilli = dayNum * dayMilli;
+    date.setTime(timeOfFirst + dayNumMilli);
+    return date;
+  };
+  //from
+  var getDateFromDayNumStr = (dayNum, year) => {
+    var date = new Date();
+    if (year) {
+      date.setFullYear(year);
+    }
+    date.setMonth(0);
+    date.setDate(0);
+    var timeOfFirst = date.getTime(); // this is the time in milliseconds of 1/1/YYYY
+    var dayMilli = 1000 * 60 * 60 * 24;
+    var dayNumMilli = dayNum * dayMilli;
+    date.setTime(timeOfFirst + dayNumMilli);
+    return date.toDateString();
+  };
+
+  const handleDateChangeInit = (date) => {
+    setFechaInicio(date);
+    var [inicio, fin] = valueSliderFechas;
+    setValueSliderFechas([calculateDay(date), fin]);
+    console.log(date);
+  };
+  const handleDateChangeEnd = (date) => {
+    var [inicio, fin] = valueSliderFechas;
+    setValueSliderFechas([inicio, calculateDay(date)]);
+    setFechaFin(date);
+    console.log(date);
+    filter_date();
+  };
+  /////DATE MANAGEMEET END
+  ///////////////////////////
+
+  ///////BEHAVIOR///////////////////
+  const handleSelectReq = (event) => {
+    setRequirementSelected(event.target.value);
+    mapu.removeLayer(currentLayer);
+    var sourceReq = new VectorSource({
+      url: `http://127.0.0.1:8000/restapi/imgsjson/${event.target.value}`,
+      format: new GeoJSON(),
+    });
+    var vectorLayerImg = new VectorLayer({
+      source: sourceReq,
+      visible: true,
+      title: 'ImgsbyReqGEOJSON',
+    });
+    setCurrentLayer(vectorLayerImg);
+    mapu.addLayer(vectorLayerImg);
+    console.log(vectorLayerImg);
+  };
+
+  const classes = useStyles();
+  const filter_date = (e) => {
+    e.preventDefault();
+
+    mapu.removeLayer(currentLayer);
+    var sourceReq = new VectorSource({
+      format: new GeoJSON(),
+      url: `http://127.0.0.1:8000/restapi/imgsjson/from=${fechaInicio.toISOString()}to=${fechaFin.toISOString()}`,
+
+      /*
+        instance
+          .post(
+            `/imgsjson/`,
+            {
+              ingestion_date_init: fechaInicio,
+              ingestion_date_end: fechaFin,
+            },
+            {
+              headers: {
+                'Content-Type': `application/json`,
+              },
+            }
+          )
+          .then((res) => {
+            sourceReq.addFeatures(
+              sourceReq.getFormat().readFeatures(JSON.stringify(res.data))
+            );
+            console.log(JSON.stringify(res.data));
+          })
+          .catch((err) => {
+            sourceReq.removeLoadedExtent(extent);
+            console.log(err);
+          });*/
+    });
+    var vectorLayerImg = new VectorLayer({
+      source: sourceReq,
+      visible: true,
+      title: 'newImgas',
+    });
+    setCurrentLayer(vectorLayerImg);
+    mapu.addLayer(vectorLayerImg);
+  };
+
   const handleSearchReq = (event) => {
     event.preventDefault();
   };
+  ///////BEHAVIOR END/////////////////
+
   return (
     <>
       <Paper component='form' className={classes.root}>
@@ -262,7 +355,7 @@ export default function IndexingImages() {
           type='submit'
           className={classes.iconButton}
           aria-label='search'
-          onClick={(e) => handleSearchReq(e)}
+          onClick={(e) => filter_date(e)}
         >
           <SearchIcon />
         </IconButton>
@@ -271,31 +364,50 @@ export default function IndexingImages() {
         id='map'
         style={{ color: 'red', width: '600px', height: '450px' }}
       ></div>
-
-      <div className={classes.slider}>
-        <Typography id='range-slider' gutterBottom>
-          Rango de fechas
-        </Typography>
-        <Slider
-          value={value}
-          onChange={handleChange}
-          valueLabelDisplay='auto'
-          aria-labelledby='range-slider'
-        />
-      </div>
-      <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <Grid container justify='space-around'>
-          <KeyboardDatePicker
-            disableToolbar
-            variant='inline'
-            format='dd/MM/yyyy'
-            margin='normal'
-            id='date-picker-inline'
-            label='Fecha inicial'
-            onChange={handleDateChange}
+      <div>
+        <div className={classes.slider}>
+          <Typography id='range-slider' gutterBottom>
+            Rango de fechas
+          </Typography>
+          <Slider
+            value={valueSliderFechas}
+            onChange={handleChangeSlider}
+            min={0}
+            max={365}
+            valueLabelDisplay='auto'
+            valueLabelFormat={(x) => getDateFromDayNumStr(x, 2020)}
+            aria-labelledby='range-slider'
           />
-        </Grid>
-      </MuiPickersUtilsProvider>
+        </div>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <Grid container justify='space-around'>
+            <KeyboardDatePicker
+              variant='inline'
+              format='dd/MM/yyyy'
+              margin='normal'
+              id='date-picker-inline'
+              label='Fecha inicial'
+              value={fechaInicio}
+              onChange={(x) => handleDateChangeInit(x)}
+            />
+          </Grid>
+        </MuiPickersUtilsProvider>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+          <Grid container justify='space-around'>
+            <KeyboardDatePicker
+              disableToolbar
+              variant='inline'
+              format='dd/MM/yyyy'
+              margin='normal'
+              id='date-picker-inline'
+              label='Fecha Final'
+              value={fechaFin}
+              onChange={(x) => handleDateChangeEnd(x)}
+            />
+          </Grid>
+        </MuiPickersUtilsProvider>
+      </div>
+
       <Grid
         style={{ marginTop: '5px' }}
         container
@@ -318,12 +430,6 @@ export default function IndexingImages() {
           ))}
         </Grid>
       </Grid>
-
-      <p>infalible</p>
-      <div>Filters</div>
-      <div>Por requerimiento</div>
-      <div>Time </div>
-      <div>Region </div>
     </>
   );
 }
