@@ -6,7 +6,3 @@ services:
       - ./FabSpaceUniandes/:/back # maps host diretory to internal container directory
     working_dir: /back/
     command: sh run.sh
-    volumes:
-      - ./FabSpaceUniandes/:/back
-    depends_on:
-      - backend
