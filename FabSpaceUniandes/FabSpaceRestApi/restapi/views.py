@@ -62,9 +62,7 @@ class Now(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        print(request.data)
         serializer = RequirementsSerializer(data=request.data)
-        print(serializer)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -185,14 +183,14 @@ class JsonImgs(APIView):
         try:
             print('hello')
             sx = serialize('geojson', Img.objects.filter(ingestion_date__range=[data.get('ingestion_date_init'), data.get('ingestion_date_end')]),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'id', 'filedir', 'ingestion_date'))
             m = json.loads(sx)
 
             return Response(m)
         except:
             print('señor')
             sx = serialize('geojson', Img.objects.all(),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'thumbnail_location', 'id', 'filedir', 'ingestion_date'))
             m = json.loads(sx)
             return Response(m)
 
@@ -203,12 +201,12 @@ class JsonImgs(APIView):
 
             print(kwargs.get('date_init'))
             sx = serialize('geojson', Img.objects.filter(ingestion_date__range=[kwargs.get('date_init'),  kwargs.get('date_end')]),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'thumbnail_location', 'esa_uiid', 'id', 'filedir', 'ingestion_date'))
             m = json.loads(sx)
             return Response(m)
         else:
             sx = serialize('geojson', Img.objects.all(),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'thumbnail_location', 'esa_uiid', 'id', 'filedir', 'ingestion_date'))
             m = json.loads(sx)
             return Response(m)
 
@@ -221,19 +219,19 @@ class JsonImgsByReq(APIView):
         try:
             requri = Requeriments.objects.get(id=req)
             sx = serialize('geojson', Img.objects.filter(origin_requirement=requri, ingestion_date__range=[data.get('ingestion_date_init'), data.get('ingestion_date_end')]),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'thumbnail_location', 'filedir', 'ingestion_date', 'id'))
             m = json.loads(sx)
             return Response(m)
         except:
             requri = Requeriments.objects.get(id=req)
             sx = serialize('geojson', Img.objects.filter(origin_requirement=requri),
-                           geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                           geometry_field='geom_img', fields=('title', 'thumbnail_location', 'filedir', 'ingestion_date', 'id'))
             m = json.loads(sx)
             return Response(m)
 
     def get(self, request, req):
         requri = Requeriments.objects.get(id=req)
         sx = serialize('geojson', Img.objects.filter(origin_requirement=requri),
-                       geometry_field='geom_img', fields=('title', 'filedir', 'ingestion_date'))
+                       geometry_field='geom_img', fields=('title', 'thumbnail_location', 'filedir', 'ingestion_date', 'id'))
         m = json.loads(sx)
         return Response(m)

@@ -74,9 +74,9 @@ class MunicipiosVeredas(models.Model):
 
 class veredas(models.Model):
 
-    objectid = models.IntegerField(primary_key=True)
+   # objectid = models.IntegerField(primary_key=True)
     dptompio = models.CharField(max_length=5)
-    codigo_ver = models.CharField(max_length=11)
+    codigo_ver = models.CharField(max_length=11, primary_key=True)
     nom_dep = models.CharField(max_length=50)
     nomb_mpio = models.CharField(max_length=50)
     nombre_ver = models.CharField(max_length=50)
@@ -172,6 +172,9 @@ class Img(models.Model):
         srid=4326, blank=True, null=True)  # la locacion de la imagen
     origin_requirement = models.ForeignKey(
         Requeriments, on_delete=models.CASCADE, blank=True, null=True)
+
+    thumbnail_location = models.TextField(
+        max_length=100, blank=True, null=True)
 
     # TO-DO cortar pedazos y crear nueva imagen. esa_uuid null
 

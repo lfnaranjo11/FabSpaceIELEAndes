@@ -14,21 +14,16 @@ from bs4 import BeautifulSoup
 from PIL import Image
 from django.contrib.gis.geos import GEOSGeometry
 import json
-
+from django.core.files.storage import default_storage
+from google.cloud import storage
 
 # from bs4 import BeautifulSoup
 # SELECT the_geom FROM geom_tableWHERE ST_DWithin(the_geom, 'SRID=312;POINT(100000 200000)', 100)
 # Select  ST_AsText(ST_SimplifyPreserveTopology(restapi_veredas.geom,1))  from restapi_veredas WHERE id=3
 
 # checking and checking
-
-
-def my_custom_sql(id_vereda):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "Select ST_AsText(ST_SimplifyPreserveTopology(restapi_veredas.geom,1))  from restapi_veredas WHERE objectid=%s", [id_vereda])
-        row = cursor.fetchone()
-    return row
+storage_client = storage.Client.from_service_account_json(
+    '/Users/lfnaranjo/Desktop/11vo/tesis/tesis_codigo/applicacion/FabSpaceUniandes/FabSpaceRestApi/My First Project-ccdf394e7866.json')
 
 
 def check_value(value):
@@ -52,15 +47,30 @@ def check_points(punto2, punto1):
         return ''
 
 
+def my_custom_sql(id_vereda):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "Select ST_AsText(ST_SimplifyPreserveTopology(restapi_veredas.geom,0.7))  from restapi_veredas WHERE codigo_ver=%s", [id_vereda])
+        row = cursor.fetchone()
+    return row
+
+
 def check_vereda_poligon(vereda_object):
     if bool(vereda_object):
-        print(vereda_object.objectid)
+        # print(vereda_object.objectid)
         # objectid = int(veredaid)
-        resultado = my_custom_sql(vereda_object.objectid)
+        resultado = my_custom_sql(vereda_object.codigo_ver)
         print(resultado[0])
         return """'( footprint:"Intersects({})")'""".format(resultado[0])
     else:
         return ''
+
+
+def already_written(esa_uiid):
+    if not Img.objects.filter(esa_uiid=esa_uiid):
+        return True
+    else:
+        return False
 
 
 def appendtolist(listx, value, prefix):
@@ -122,12 +132,12 @@ def read_MTD(file_name, id):
     print(str(pnt))
     print(hora)
     requri = Requeriments.objects.get(id=id)
-    imagen = Img(title='call an ambulance', esa_uiid=image_uri, state='DISPONIBLE',
+    imagen = Img(title='test image', esa_uiid=image_uri, state='DISPONIBLE',
                  filedir=imgs_location, geom_img=GEOSGeometry(pnt), ingestion_date=hora,
                  origin_requirement=requri)
     salvada = imagen.save()
-    print(salvada)
-    #serializer = ImgSerializer(data=data)
+    return imagen
+    # serializer = ImgSerializer(data=data)
     # if not serializer.is_valid():
     #    print(serializer.errors)
     #    print('not ok')
@@ -168,7 +178,7 @@ def points_to_multipoligon_object(points_string):
 
 
 def cropimage(path, name):
-    #m = Image.open("hopper.jpg")
+    # m = Image.open("hopper.jpg")
     # The crop method from the Image module takes four coordinates as input.
     # The right can also be represented as (left+width)
     # and lower can be represented as (upper+height).
@@ -179,18 +189,49 @@ def cropimage(path, name):
     im_crop.save(path + '/'+name + "croped.jp2")
 
 
-def createThumbnail(path, name):
+def createThumbnail(imagen_obj):
     size = 128, 128
-    im = Image.open(path+'/'+name + ".jp2")
-    im_resized = im.resize(size)
-    #im.save(path + ".thumbnail", "JPEG")
-    im_resized.save(path + '/'+name + "resized.jp2")
+    path1 = imagen_obj.esa_uiid
+    file_name2 = path1+'/GRANULE'
+    path_file = Path(__file__).resolve().parent
+    path_file = path_file.resolve().parent
+    path_file = path_file.joinpath(file_name2)
+    child_dir = [x for x in path_file.iterdir() if x.is_dir()]
+    path_file = child_dir[0].resolve()
+    print(str(child_dir[0].resolve()))
+    # path_almost=child_dir[0].resolve()/ 'IMG_DATA'/'R60m'
+    path_file = path_file / 'IMG_DATA'/'R60m'
+    img_path = [x for x in path_file.iterdir() if (
+        x.is_file() and '_TCI_' in str(x))]
+    im = Image.open(str(img_path[0].resolve()))
+    size = 128, 128
+    im.thumbnail(size)
+    path_filetb = Path(__file__).resolve().parent
+    path_filetb = path_file.resolve().parent
+    path_filetb = path_filetb / 'media'
+    tnpath = str(path_filetb.resolve())+str(imagen_obj.id)+'.jp2'
+    # aqui
+    im.save(str(path_filetb.resolve())+str(imagen_obj.id)+'.jp2')
+    bucket = storage_client.get_bucket('fabspace-uniandes-cloud-imgs')
+    b = bucket.blob('thumbnails/{}.jp2'.format(imagen_obj.id))
+    with open(tnpath, 'rb') as f:
+        b.upload_from_file(f)
+    tnpath = str(path_filetb.resolve())+str(imagen_obj.id)+'.png'
+    im.save(tnpath, format='PNG')
+    bucket = storage_client.get_bucket('fabspace-uniandes-cloud-imgs')
+    b = bucket.blob('thumbnails/{}.png'.format(imagen_obj.id))
+    with open(tnpath, 'rb') as f:
+        b.upload_from_file(f)
+    thumbnail_location = 'https://storage.googleapis.com/fabspace-uniandes-cloud-imgs/thumbnails/' + \
+        str(imagen_obj.id)
+    upt = Img.objects.filter(id=imagen_obj.id).update(
+        thumbnail_location=thumbnail_location)
+    upt.save()
 
 
 @ shared_task
 def query_and_download(id):
     # TO-DO arreglar el poligono y revisar match de opciones
-    # id es el id del requerimiento
     query_file = './restapi/queryfiles/{}.csv'
     query_file_instance = query_file.format(id)
     reqmt = Requeriments.objects.filter(id=id).first()
@@ -205,7 +246,9 @@ def query_and_download(id):
     [name, uuidd_copernicus] = valores.split(',')
     img_file = './PRODUCT/{}.zip'.format(name)
     proc = subprocess.check_call(['unzip', img_file])
-    read_MTD(name, id)
+    imagen = read_MTD(name, id)
+    createThumbnail(imagen)
+
     return print(valores)
 
 
@@ -260,6 +303,4 @@ def proccess_image(img_id):
 
 @ shared_task
 def watch_list():
-    requiriments = Requeriments.objects.filter(watchlist='verdadero')
-    for re in requiriments:
-        qery2 = """./restapi/dhusget.sh -u {} -p {} -m {re.mission}  -F '(footprint:"Intersects(POLYGON(({re.vereda})))")'  -o ${bold}all${normal} -l 1 -t 24 """
+    print('not yet tested')
