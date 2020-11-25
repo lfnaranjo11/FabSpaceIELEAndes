@@ -1,10 +1,10 @@
 FROM python:3
-RUN mkdir /backend
-WORKDIR /backend
-ADD requirements.txt /backend/
+RUN mkdir /back
+WORKDIR /back
+ADD requirements.txt /back/
 RUN pip install -r requirements.txt
-ADD . /backend/
-ADD run.sh /backend/
+ADD . /back/
+ADD run.sh /back/
 RUN chmod +x ./run.sh
 RUN yum install binutils libproj-dev gdal-bin
 EXPOSE 8000
