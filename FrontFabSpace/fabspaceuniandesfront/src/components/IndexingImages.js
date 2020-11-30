@@ -174,8 +174,11 @@ export default function IndexingImages() {
       var arreglo = selectedFeatures.getArray().map(function (feature) {
         return {
           title: feature.get('title'),
+          id: feature.get('id'),
+          esa: feature.get('esa_uiid'),
           ingestion_date: feature.get('ingestion_date'),
           filedir: feature.get('filedir'),
+          thumbnail_location: feature.get('thumbnail_location'),
         };
       });
       console.log(arreglo);
@@ -265,7 +268,7 @@ export default function IndexingImages() {
     setRequirementSelected(event.target.value);
     mapu.removeLayer(currentLayer);
     var sourceReq = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/imgsjson/${event.target.value}`,
+      url: `http://${process.env.REACT_APP_BACK_END}/restapi/imgsjson/${event.target.value}`,
       format: new GeoJSON(),
     });
     var vectorLayerImg = new VectorLayer({
@@ -285,7 +288,9 @@ export default function IndexingImages() {
     mapu.removeLayer(currentLayer);
     var sourceReq = new VectorSource({
       format: new GeoJSON(),
-      url: `http://127.0.0.1:8000/restapi/imgsjson/from=${fechaInicio.toISOString()}to=${fechaFin.toISOString()}`,
+      url: `http://${
+        process.env.REACT_APP_BACK_END
+      }/restapi/imgsjson/from=${fechaInicio.toISOString()}to=${fechaFin.toISOString()}`,
 
       /*
         instance
@@ -425,6 +430,20 @@ export default function IndexingImages() {
                 <Typography variant='body2' color='textSecondary' component='p'>
                   {imagen.ingestion_date}
                 </Typography>
+                <Typography variant='body2' color='textSecondary' component='p'>
+                  {imagen.id}
+                </Typography>
+
+                <picture>
+                  <source
+                    srcset={`${imagen.thumbnail_location}.jp2`}
+                    type='image/jp2'
+                  />
+                </picture>
+                <img
+                  src={`${imagen.thumbnail_location}.png`}
+                  alt={`${imagen.thumbnail_location}.png`}
+                ></img>
               </CardContent>
             </Card>
           ))}

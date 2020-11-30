@@ -15,6 +15,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
+
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction='up' ref={ref} {...props} />;
 });
@@ -48,17 +53,46 @@ const Toolbar = (props) => {
       <div className={classes.root}>
         <AppBar position='static' color='secondary'>
           <Tooly variant='dense'>
-            <IconButton
-              edge='start'
-              className={classes.menuButton}
-              color='inherit'
-              aria-label='menu'
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant='h6' color='inherit'>
-              FabSpace Uniandes
-            </Typography>
+            <PopupState variant='popover' popupId='demo-popup-menu'>
+              {(popupState) => (
+                <React.Fragment>
+                  <IconButton
+                    edge='start'
+                    className={classes.menuButton}
+                    color='inherit'
+                    aria-label='menu'
+                    {...bindTrigger(popupState)}
+                  >
+                    <MenuIcon />
+                  </IconButton>
+
+                  <Menu {...bindMenu(popupState)}>
+                    <MenuItem onClick={popupState.close}>
+                      <Link class='nav-link' to='/'>
+                        hOme{' '}
+                      </Link>
+                    </MenuItem>
+                    <MenuItem onClick={popupState.close}>
+                      <Link class='nav-link' to='/register'>
+                        Registrar{' '}
+                      </Link>
+                    </MenuItem>
+                    <MenuItem onClick={popupState.close}>
+                      <Link class='nav-link' to='/index'>
+                        IndexDeImagenes{' '}
+                      </Link>
+                    </MenuItem>
+                    <MenuItem onClick={popupState.close}>
+                      <Link class='nav-link' to='/BigZoneCreateReq'>
+                        <Typography variant='h12' color='inherit'>
+                          Registrar zona amplia{' '}
+                        </Typography>
+                      </Link>
+                    </MenuItem>
+                  </Menu>
+                </React.Fragment>
+              )}
+            </PopupState>
           </Tooly>
         </AppBar>
       </div>

@@ -37,6 +37,12 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
     minWidth: 120,
   },
+  textfroot: {
+    '& > *': {
+      margin: theme.spacing(1),
+      width: '25ch',
+    },
+  },
 }));
 
 export default function CreateRequeriment() {
@@ -52,6 +58,8 @@ export default function CreateRequeriment() {
   const [selectedVda, setSelectedVda] = useState();
   const [mapu, setMap] = useState();
   const [selectedFeaturesu, setselectedFeaturesu] = useState();
+  const nombreRef = useRef('');
+
   useEffect(() => {
     instance
       .get('/listdeptos/')
@@ -81,6 +89,7 @@ export default function CreateRequeriment() {
   }, []);
   const handleSelectVereda = (event) => {
     setSelectedVda(event.target.value);
+    console.log(event.target.value);
     //enviar la solicitud con esa geometria
   };
   const handleSelectMpio = (event) => {
@@ -94,7 +103,7 @@ export default function CreateRequeriment() {
         // console.log(err);
       });
     var sourceMpios = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/veredasgeojson/${event.target.value}`,
+      url: `http://${process.env.REACT_APP_BACK_END}/restapi/veredasgeojson/${event.target.value}`,
       format: new GeoJSON(),
     });
     var vectorLayerMpios = new VectorLayer({
@@ -130,7 +139,7 @@ export default function CreateRequeriment() {
     setSelectedDepto(event.target.value);
     //console.log(event.target.value);
     var sourceDepto = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/deptogeojson/${event.target.value}`,
+      url: `http://${process.env.REACT_APP_BACK_END}/restapi/deptogeojson/${event.target.value}`,
       format: new GeoJSON(),
     });
     var vectorLayerDepto = new VectorLayer({
@@ -139,7 +148,7 @@ export default function CreateRequeriment() {
       title: 'ColombiaDeptoGEOJSON',
     });
     var sourceMpios = new VectorSource({
-      url: `http://127.0.0.1:8000/restapi/mpiosgeojson/${event.target.value}`,
+      url: `http://${process.env.REACT_APP_BACK_END}/restapi/mpiosgeojson/${event.target.value}`,
       format: new GeoJSON(),
     });
     var vectorLayerMpios = new VectorLayer({
@@ -185,6 +194,29 @@ export default function CreateRequeriment() {
         infoBox.innerHTML = 'No municipios selected';
       }
     });
+  };
+
+  const handleSubmit = (state) => {
+    const options = {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    };
+    var bodyFormData = new FormData();
+    bodyFormData.append(
+      'title',
+      nombreRef.current.children[1].children[0].value
+    );
+    bodyFormData.append('vereda', selectedVda);
+    bodyFormData.append('state', state);
+    bodyFormData.append('mission', 'Sentinel-2');
+    instance
+      .post(`/now/`, bodyFormData, options)
+      .then((resp) => {
+        console.log(resp.data);
+      })
+      .catch((error) => {
+        //console.log(error.resp.original_design);
+        // console.log(error);
+      });
   };
 
   return (
@@ -241,14 +273,27 @@ export default function CreateRequeriment() {
           ))}
         </Select>
       </FormControl>
+      <form className={classes.textfroot} noValidate autoComplete='off'>
+        <TextField
+          id='outlined-basic'
+          ref={nombreRef}
+          label='titulo'
+          variant='outlined'
+        />
+      </form>
       <Button
         variant='outlined'
         color='primary'
-        onClick={() => {
-          alert(selectedVda);
-        }}
+        onClick={(e) => handleSubmit('NOW')}
       >
-        Primary
+        Enviar Ahora
+      </Button>
+      <Button
+        variant='outlined'
+        color='primary'
+        onClick={(e) => handleSubmit('WATCHLIST')}
+      >
+        Monitorear
       </Button>
     </>
   );

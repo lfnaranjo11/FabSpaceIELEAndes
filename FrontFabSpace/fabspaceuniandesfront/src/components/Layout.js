@@ -13,6 +13,7 @@ import { useToken } from '../store/TokenContext';
 import CreateRequeriment from './CreateRequeriment';
 import IndexingImages from './IndexingImages';
 import Home from './Home';
+import BigZoneCreateReq from './BigZoneCreateReq';
 
 //withMyHook(MyDiv);
 const Layout = (props) => {
@@ -28,6 +29,7 @@ const Layout = (props) => {
         <Route path='/register' exact component={CreateRequeriment} />
         <Route path='/index' exact component={IndexingImages} />
         <Route path='/' exact component={Home} />
+        <Route path='/BigZoneCreateReq' exact component={BigZoneCreateReq} />
       </Switch>
     </>
   );
