@@ -20,7 +20,6 @@ world_mapping = {
 
 # Auto-generated `LayerMapping` dictionary for veredas model
 veredas_mapping = {
-    'objectid': 'OBJECTID',
     'dptompio': 'DPTOMPIO',
     'codigo_ver': 'CODIGO_VER',
     'nom_dep': 'NOM_DEP',
@@ -31,7 +30,7 @@ veredas_mapping = {
     'descripcio': 'DESCRIPCIO',
     'seudonimos': 'SEUDONIMOS',
     'area_ha': 'AREA_HA',
-    'cod_dpto': 'COD_DPTO',
+    'cod_dpto': {'dpto_ccdgo': 'COD_DPTO'},  # foreign key field
     'shape_leng': 'Shape_Leng',
     'shape_area': 'Shape_Area',
     'geom': 'MULTIPOLYGON25D',
@@ -45,7 +44,8 @@ departamentosveredas_mapping = {
 # Auto-generated `LayerMapping` dictionary for MunicipiosVeredas model
 municipiosveredas_mapping = {
     'dptompio': 'DPTOMPIO',
-    'dpto_ccdgo': 'DPTO_CCDGO',
+    #  'dpto_ccdgo': 'DPTO_CCDGO',
+    'dpto_ccdgo': {'dpto_ccdgo': 'DPTO_CCDGO'},
     'mpio_ccdgo': 'MPIO_CCDGO',
     'mpio_cnmbr': 'MPIO_CNMBR',
     'mpio_ccnct': 'MPIO_CCNCT',
@@ -71,14 +71,20 @@ ds4 = DataSource(str(world_shp4))
 
 
 def run(verbose=True):
+    numfeatures_veredas=32305
 
-    lm = LayerMapping(WorldBorder, ds, world_mapping, transform=False)
-    lm.save(strict=True, verbose=verbose)
-    #lm2 = LayerMapping(veredas, ds2, veredas_mapping, transform=False)
-    #lm2.save(strict=True, verbose=verbose)
-    lm3 = LayerMapping(DepartamentosVeredas, ds3,
-                       departamentosveredas_mapping, transform=False)
-    lm3.save(strict=True, verbose=verbose)
-    lm4 = LayerMapping(MunicipiosVeredas, ds4,
-                       municipiosveredas_mapping, transform=False)
-    lm4.save(strict=True, verbose=verbose)
+    #lm = LayerMapping(WorldBorder, ds, world_mapping, transform=False)
+   #lm.save(strict=True, verbose=verbose)
+    lm2 = LayerMapping(veredas, ds2, veredas_mapping, transaction_mode= 'autocommit',transform=False)
+    lm2.save(strict=False, fid_range=(0,5000),verbose=False,progress=True,step=500)
+    lm2.save(strict=False,fid_range=(5001,15000), verbose=False,progress=True,step=500)
+       lm2.save(strict=False,fid_range=(15001,20000), verbose=False,progress=True,step=500)
+    lm2.save(strict=False,fid_range=(20001,25000), verbose=False,progress=True,step=500)
+    lm2.save(strict=False,fid_range=(25001,32305), verbose=False,progress=True,step=500)
+
+    # lm3 = LayerMapping(DepartamentosVeredas, ds3,
+    #                 departamentosveredas_mapping, transform = False)
+    # lm3.save(strict=True, verbose=verbose)
+    # lm4 = LayerMapping(MunicipiosVeredas, ds4,
+    #                 municipiosveredas_mapping, transform = False)
+    # lm4.save(strict=True, verbose=verbose)
