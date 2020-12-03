@@ -16,14 +16,20 @@ from django.contrib.gis.geos import GEOSGeometry
 import json
 from django.core.files.storage import default_storage
 from google.cloud import storage
+import boto3
+from django.conf import settings
+
 
 # from bs4 import BeautifulSoup
 # SELECT the_geom FROM geom_tableWHERE ST_DWithin(the_geom, 'SRID=312;POINT(100000 200000)', 100)
 # Select  ST_AsText(ST_SimplifyPreserveTopology(restapi_veredas.geom,1))  from restapi_veredas WHERE id=3
 
 # checking and checking
+file_dir = Path(__file__).parent.parent.parent.joinpath('google-account.json')
+str(file_dir.resolve())
+print(str(file_dir.resolve()))
 storage_client = storage.Client.from_service_account_json(
-    '/Users/lfnaranjo/Desktop/11vo/tesis/tesis_codigo/applicacion/FabSpaceUniandes/FabSpaceRestApi/My First Project-ccdf394e7866.json')
+    str(file_dir.resolve()))
 
 
 def check_value(value):
@@ -226,7 +232,6 @@ def createThumbnail(imagen_obj):
         str(imagen_obj.id)
     upt = Img.objects.filter(id=imagen_obj.id).update(
         thumbnail_location=thumbnail_location)
-    upt.save()
 
 
 @ shared_task

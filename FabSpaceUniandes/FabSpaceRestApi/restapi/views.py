@@ -15,6 +15,7 @@ from django.core.serializers import serialize
 from .models import veredas, WorldBorder
 from django.core.serializers.json import DjangoJSONEncoder
 import json
+from django.contrib.gis.geos import GEOSGeometry
 
 
 #   permission_classes = (AllowAny,)
@@ -235,3 +236,16 @@ class JsonImgsByReq(APIView):
                        geometry_field='geom_img', fields=('title', 'thumbnail_location', 'filedir', 'ingestion_date', 'id'))
         m = json.loads(sx)
         return Response(m)
+
+
+class ReqBig(APIView):
+
+    def post(self, request):
+        serializer = RequirementsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer.save()
+            query_and_download.apply_async(
+                args=[serializer.data['id'], ], acks_late=True)
+            return Response('holi', status=status.HTTP_201_CREATED)

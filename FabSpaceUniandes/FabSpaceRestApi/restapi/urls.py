@@ -23,6 +23,8 @@ urlpatterns = [
     path('imgsjson/from=<str:date_init>to=<str:date_end>',
          views.JsonImgs.as_view()),
     path('imgsjson/<str:req>', views.JsonImgsByReq.as_view()),
+    path('reqbig/', views.ReqBig.as_view()),
+
 
     re_path(
         r'^imgsjson/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/$', views.JsonImgs.as_view()),

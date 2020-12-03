@@ -1,19 +1,10 @@
 version: '3'
 services:
-  backend:
+  worker:
     env_file:
       - './FabSpaceUniandes/production.env'
     volumes:
       - ./FabSpaceUniandes/:/back # maps host diretory to internal container directory
     working_dir: /back/
     build: ./FabSpaceUniandes
-    command: sh run.sh
-  nginx:
-    image: nginx:latest
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx/nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./back/:/back
-    depends_on:
-      - backend
+    command: sh runWorker.sh
